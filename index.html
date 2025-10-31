@@ -1,882 +1,662 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محرر الأكواد الاحترافي</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #4a6cf7;
-            --bg-color: #f5f8ff;
-            --sidebar-bg: #ffffff;
-            --editor-bg: #ffffff;
-            --text-color: #2d3748;
-            --border-color: #e2e8f0;
-            --terminal-bg: #1a202c;
-            --terminal-text: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        .dark-mode {
-            --primary-color: #5e7df7;
-            --bg-color: #1a202c;
-            --sidebar-bg: #2d3748;
-            --editor-bg: #2d3748;
-            --text-color: #e2e8f0;
-            --border-color: #4a5568;
-            --terminal-bg: #0d1117;
-            --terminal-text: #c9d1d9;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .container {
-            display: flex;
-            height: 100vh;
-        }
-
-        /* الشريط العلوي */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            background-color: var(--sidebar-bg);
-            box-shadow: var(--shadow);
-            border-bottom: 1px solid var(--border-color);
-            z-index: 100;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-        }
-
-        .logo i {
-            font-size: 1.5rem;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .language-selector select {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background-color: var(--editor-bg);
-            color: var(--text-color);
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .language-selector select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: none;
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 4px rgba(74, 108, 247, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(74, 108, 247, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-secondary {
-            background-color: var(--editor-bg);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            box-shadow: none;
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--border-color);
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-
-        .theme-toggle:hover {
-            background-color: var(--border-color);
-        }
-
-        /* المحتوى الرئيسي */
-        .main-content {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* الشريط الجانبي */
-        .sidebar {
-            width: 250px;
-            background-color: var(--sidebar-bg);
-            border-left: 1px solid var(--border-color);
-            padding: 15px;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .sidebar-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .file-list {
-            list-style: none;
-        }
-
-        .file-item {
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .file-item:hover {
-            background-color: var(--border-color);
-        }
-
-        .file-item.active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .file-icon {
-            font-size: 0.9rem;
-        }
-
-        /* منطقة المحرر */
-        .editor-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .editor-wrapper {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #editor {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* الطرفية */
-        .terminal-container {
-            height: 250px;
-            background-color: var(--terminal-bg);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .terminal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 15px;
-            background-color: rgba(0, 0, 0, 0.2);
-            color: var(--terminal-text);
-            font-size: 0.9rem;
-        }
-
-        .terminal-controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .terminal-controls button {
-            background: none;
-            border: none;
-            color: var(--terminal-text);
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        #terminal {
-            flex: 1;
-            padding: 10px 15px;
-            color: var(--terminal-text);
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-
-        .terminal-input-line {
-            display: flex;
-            align-items: center;
-        }
-
-        .terminal-prompt {
-            color: #4ade80;
-            margin-left: 5px;
-        }
-
-        #terminal-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--terminal-text);
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            outline: none;
-            padding: 0 5px;
-        }
-
-        /* المعاينة */
-        .preview-container {
-            height: 250px;
-            background-color: white;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .preview-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 15px;
-            background-color: var(--sidebar-bg);
-            color: var(--text-color);
-            font-size: 0.9rem;
-        }
-
-        #preview {
-            flex: 1;
-            border: none;
-        }
-
-        /* التبويبات */
-        .tabs {
-            display: flex;
-            background-color: var(--sidebar-bg);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .tab {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            border-bottom-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        /* التجاوبية */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                height: 150px;
-                border-left: none;
-                border-top: 1px solid var(--border-color);
-            }
-            
-            .main-content {
-                flex-direction: column;
-            }
-            
-            .editor-container {
-                height: 60vh;
-            }
-            
-            .terminal-container, .preview-container {
-                height: 150px;
-            }
-        }
-
-        /* تأثيرات النيو مورفزم */
-        .neumorphic {
-            border-radius: 10px;
-            background: var(--sidebar-bg);
-            box-shadow:  5px 5px 10px #b8b8b8,
-                        -5px -5px 10px #ffffff;
-        }
-
-        .dark-mode .neumorphic {
-            box-shadow:  5px 5px 10px #1a1a1a,
-                        -5px -5px 10px #2e2e2e;
-        }
-
-        /* الأنيميشن */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.3s ease;
-        }
-
-        /* شريط التمرير */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--border-color);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3a5bd9;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="top-bar">
-            <div class="logo">
-                <i class="fas fa-code"></i>
-                <span>محرر الأكواد</span>
-            </div>
-            <div class="controls">
-                <div class="language-selector">
-                    <select id="language-select">
-                        <option value="javascript">JavaScript</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                        <option value="python">Python</option>
-                        <option value="cpp">C++</option>
-                        <option value="java">Java</option>
-                    </select>
-                </div>
-                <button class="btn" id="run-btn">
-                    <i class="fas fa-play"></i>
-                    تشغيل
-                </button>
-                <button class="btn btn-secondary" id="save-btn">
-                    <i class="fas fa-save"></i>
-                    حفظ
-                </button>
-                <button class="btn btn-secondary" id="download-btn">
-                    <i class="fas fa-download"></i>
-                    تحميل
-                </button>
-                <button class="theme-toggle" id="theme-toggle">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="editor-container">
-                <div class="tabs">
-                    <div class="tab active" data-tab="editor">المحرر</div>
-                    <div class="tab" data-tab="preview">المعاينة</div>
-                </div>
-                <div class="editor-wrapper">
-                    <div id="editor"></div>
-                </div>
-                <div class="terminal-container">
-                    <div class="terminal-header">
-                        <span>الطرفية</span>
-                        <div class="terminal-controls">
-                            <button id="clear-terminal">
-                                <i class="fas fa-trash"></i> مسح
-                            </button>
-                            <button id="toggle-terminal">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="terminal"></div>
-                </div>
-            </div>
-
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <div class="sidebar-title">الملفات</div>
-                    <button class="btn btn-secondary" id="new-file-btn">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-                <ul class="file-list">
-                    <li class="file-item active" data-file="index.html">
-                        <i class="fas fa-file-code file-icon"></i>
-                        index.html
-                    </li>
-                    <li class="file-item" data-file="script.js">
-                        <i class="fas fa-file-code file-icon"></i>
-                        script.js
-                    </li>
-                    <li class="file-item" data-file="style.css">
-                        <i class="fas fa-file-code file-icon"></i>
-                        style.css
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
-    <script>
-        // تهيئة المتغيرات
-        let editor;
-        let currentFile = 'index.html';
-        let isDarkMode = localStorage.getItem('darkMode') === 'true';
-        let files = {
-            'index.html': `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مشروعي</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <h1>مرحباً بالعالم!</h1>
-        <p>هذا مشروع HTML بسيط.</p>
-        <button id="click-btn">انقر هنا</button>
-    </div>
-    <script src="script.js"><\/script>
-</body>
-</html>`,
-            'script.js': `// كود JavaScript هنا
-document.getElementById('click-btn').addEventListener('click', function() {
-    alert('مرحباً! لقد ضغطت على الزر');
-    console.log('تم النقر على الزر');
-});
-
-// دالة بسيطة
-function greet(name) {
-    return 'مرحباً ' + name + '!';
-}
-
-console.log(greet('المستخدم'));
-console.log('يمكنك كتابة كود JavaScript هنا');`,
-            'style.css': `/* كود CSS هنا */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f8ff;
-    color: #2d3748;
-    margin: 0;
-    padding: 20px;
-    text-align: center;
-}
-
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    color: #4a6cf7;
-}
-
-button {
-    background-color: #4a6cf7;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #3a5bd9;
-}`
-        };
-
-        // تهيئة الوضع الليلي
-        function initTheme() {
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-                document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-sun"></i>';
-            } else {
-                document.body.classList.remove('dark-mode');
-                document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-moon"></i>';
-            }
-        }
-
-        // تهيئة محرر Monaco
-        function initEditor() {
-            require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
-            
-            require(['vs/editor/editor.main'], function() {
-                editor = monaco.editor.create(document.getElementById('editor'), {
-                    value: files[currentFile],
-                    language: getLanguageFromFile(currentFile),
-                    theme: isDarkMode ? 'vs-dark' : 'vs',
-                    automaticLayout: true,
-                    fontSize: 14,
-                    minimap: { enabled: true },
-                    scrollBeyondLastLine: false,
-                    wordWrap: 'on'
-                });
-
-                // تحديث المحتوى عند تغيير النص
-                editor.onDidChangeModelContent(function() {
-                    files[currentFile] = editor.getValue();
-                    localStorage.setItem('savedFiles', JSON.stringify(files));
-                });
-            });
-        }
-
-        // الحصول على اللغة من اسم الملف
-        function getLanguageFromFile(filename) {
-            const ext = filename.split('.').pop();
-            const langMap = {
-                'html': 'html',
-                'css': 'css',
-                'js': 'javascript',
-                'py': 'python',
-                'cpp': 'cpp',
-                'java': 'java'
-            };
-            return langMap[ext] || 'plaintext';
-        }
-
-        // تحديث المحرر عند تغيير الملف
-        function updateEditorForFile(file) {
-            if (editor) {
-                const model = editor.getModel();
-                model.setValue(files[file] || '// اكتب كودك هنا');
-                monaco.editor.setModelLanguage(model, getLanguageFromFile(file));
-            }
-        }
-
-        // تحديث الطرفية
-        function updateTerminal(message, isError = false) {
-            const terminal = document.getElementById('terminal');
-            const line = document.createElement('div');
-            line.textContent = message;
-            line.style.color = isError ? '#f56565' : '#e2e8f0';
-            terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        // محاكاة تشغيل الكود
-        function runCode() {
-            updateTerminal('$ تشغيل الكود...');
-            
-            // محاكاة وقت التشغيل
-            setTimeout(() => {
-                if (currentFile === 'index.html') {
-                    // عرض معاينة HTML
-                    document.querySelector('.preview-container').style.display = 'flex';
-                    const preview = document.getElementById('preview');
-                    const iframe = document.createElement('iframe');
-                    iframe.id = 'preview-frame';
-                    iframe.srcdoc = files['index.html'] + 
-                                    '<style>' + files['style.css'] + '</style>' + 
-                                    '<script>' + files['script.js'] + '<\/script>';
-                    preview.innerHTML = '';
-                    preview.appendChild(iframe);
-                    updateTerminal('$ تم تشغيل مشروع HTML بنجاح');
-                } else if (currentFile === 'script.js') {
-                    // محاكاة تشغيل JavaScript
-                    try {
-                        // هذه مجرد محاكاة - في التطبيق الحقيقي سيتم استخدام WebContainers
-                        updateTerminal('$ تشغيل script.js...');
-                        updateTerminal('> مرحباً المستخدم!');
-                        updateTerminal('> يمكنك كتابة كود JavaScript هنا');
-                        updateTerminal('$ تم التشغيل بنجاح');
-                    } catch (error) {
-                        updateTerminal('$ خطأ: ' + error.message, true);
-                    }
-                } else if (currentFile === 'style.css') {
-                    updateTerminal('$ تم تحميل ملف CSS');
-                } else if (currentFile.endsWith('.py')) {
-                    updateTerminal('$ تشغيل Python باستخدام Pyodide...');
-                    updateTerminal('> مرحباً من Python!');
-                } else if (currentFile.endsWith('.cpp')) {
-                    updateTerminal('$ تجميع وتشغيل C++ باستخدام Emscripten...');
-                    updateTerminal('> مرحباً من C++!');
-                } else if (currentFile.endsWith('.java')) {
-                    updateTerminal('$ تجميع وتشغيل Java باستخدام CheerpJ...');
-                    updateTerminal('> مرحباً من Java!');
-                }
-            }, 1000);
-        }
-
-        // حفظ الملفات
-        function saveFiles() {
-            localStorage.setItem('savedFiles', JSON.stringify(files));
-            updateTerminal('$ تم حفظ الملفات بنجاح');
-        }
-
-        // تحميل الملفات
-        function downloadFiles() {
-            updateTerminal('$ جاري تحميل الملفات...');
-            // محاكاة التحميل
-            setTimeout(() => {
-                updateTerminal('$ تم تحميل الملفات بنجاح');
-            }, 1000);
-        }
-
-        // إنشاء ملف جديد
-        function createNewFile() {
-            const fileName = prompt('أدخل اسم الملف الجديد (مع الامتداد):');
-            if (fileName) {
-                files[fileName] = '// اكتب كودك هنا';
-                
-                const fileList = document.querySelector('.file-list');
-                const fileItem = document.createElement('li');
-                fileItem.className = 'file-item';
-                fileItem.setAttribute('data-file', fileName);
-                
-                const fileIcon = document.createElement('i');
-                fileIcon.className = 'fas fa-file-code file-icon';
-                
-                fileItem.appendChild(fileIcon);
-                fileItem.appendChild(document.createTextNode(fileName));
-                fileList.appendChild(fileItem);
-                
-                // إضافة مستمع حدث للملف الجديد
-                fileItem.addEventListener('click', function() {
-                    document.querySelectorAll('.file-item').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    currentFile = this.getAttribute('data-file');
-                    updateEditorForFile(currentFile);
-                });
-                
-                updateTerminal('$ تم إنشاء ملف جديد: ' + fileName);
-            }
-        }
-
-        // تهيئة الأحداث
-        function initEvents() {
-            // تغيير اللغة
-            document.getElementById('language-select').addEventListener('change', function() {
-                const lang = this.value;
-                let newFile = '';
-                
-                switch(lang) {
-                    case 'html': newFile = 'index.html'; break;
-                    case 'javascript': newFile = 'script.js'; break;
-                    case 'css': newFile = 'style.css'; break;
-                    case 'python': newFile = 'main.py'; break;
-                    case 'cpp': newFile = 'main.cpp'; break;
-                    case 'java': newFile = 'Main.java'; break;
-                }
-                
-                if (newFile && !files[newFile]) {
-                    files[newFile] = getDefaultCode(lang);
-                }
-                
-                if (newFile) {
-                    document.querySelectorAll('.file-item').forEach(item => {
-                        item.classList.remove('active');
-                        if (item.getAttribute('data-file') === newFile) {
-                            item.classList.add('active');
-                        }
-                    });
-                    
-                    currentFile = newFile;
-                    updateEditorForFile(currentFile);
-                }
-            });
-
-            // تشغيل الكود
-            document.getElementById('run-btn').addEventListener('click', runCode);
-
-            // حفظ الملفات
-            document.getElementById('save-btn').addEventListener('click', saveFiles);
-
-            // تحميل الملفات
-            document.getElementById('download-btn').addEventListener('click', downloadFiles);
-
-            // تبديل الوضع الليلي
-            document.getElementById('theme-toggle').addEventListener('click', function() {
-                isDarkMode = !isDarkMode;
-                localStorage.setItem('darkMode', isDarkMode);
-                initTheme();
-                
-                if (editor) {
-                    monaco.editor.setTheme(isDarkMode ? 'vs-dark' : 'vs');
-                }
-            });
-
-            // إنشاء ملف جديد
-            document.getElementById('new-file-btn').addEventListener('click', createNewFile);
-
-            // تغيير الملف النشط
-            document.querySelectorAll('.file-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    document.querySelectorAll('.file-item').forEach(i => {
-                        i.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    currentFile = this.getAttribute('data-file');
-                    updateEditorForFile(currentFile);
-                });
-            });
-
-            // التبويبات
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('.tab').forEach(t => {
-                        t.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    
-                    const tabName = this.getAttribute('data-tab');
-                    if (tabName === 'preview') {
-                        document.querySelector('.terminal-container').style.display = 'none';
-                        document.querySelector('.preview-container').style.display = 'flex';
-                    } else {
-                        document.querySelector('.terminal-container').style.display = 'flex';
-                        document.querySelector('.preview-container').style.display = 'none';
-                    }
-                });
-            });
-
-            // مسح الطرفية
-            document.getElementById('clear-terminal').addEventListener('click', function() {
-                document.getElementById('terminal').innerHTML = '';
-            });
-
-            // تبديل الطرفية
-            document.getElementById('toggle-terminal').addEventListener('click', function() {
-                const terminal = document.querySelector('.terminal-container');
-                if (terminal.style.height === '40px') {
-                    terminal.style.height = '250px';
-                    this.innerHTML = '<i class="fas fa-chevron-down"></i>';
-                } else {
-                    terminal.style.height = '40px';
-                    this.innerHTML = '<i class="fas fa-chevron-up"></i>';
-                }
-            });
-        }
-
-        // الحصول على الكود الافتراضي للغة
-        function getDefaultCode(language) {
-            switch(language) {
-                case 'python':
-                    return `# كود Python هنا
-def main():
-    print("مرحباً بالعالم من Python!")
-    
-if __name__ == "__main__":
-    main()`;
-                case 'cpp':
-                    return `// كود C++ هنا
-#include <iostream>
-using namespace std;
-
-int main() {
-    cout << "مرحباً بالعالم من C++!" << endl;
-    return 0;
-}`;
-                case 'java':
-                    return `// كود Java هنا
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("مرحباً بالعالم من Java!");
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>محرر الأكواد الفخم — عبدالإله</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <!-- xterm.css -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <!-- Simple CSS reset + neumorphism style -->
+  <style>
+    :root{
+      --bg:#e7ecf0; --card:#edf2f6; --muted:#6b7280; --accent:#7c5cff;
+      --glass: rgba(255,255,255,0.6);
+      --shadow-1: 15px 15px 30px rgba(0,0,0,0.08), -10px -8px 20px rgba(255,255,255,0.8);
     }
-}`;
-                default:
-                    return '// اكتب كودك هنا';
-            }
-        }
+    [data-theme="dark"]{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#8b6bff;
+      --glass: rgba(255,255,255,0.03);
+      --shadow-1: 10px 10px 30px rgba(0,0,0,0.6), -6px -6px 18px rgba(255,255,255,0.02);
+    }
+    html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Tahoma, Arial; background:linear-gradient(180deg,var(--bg), #dfe7ef); transition:background .3s}
+    .app{display:flex;flex-direction:column;height:100vh;padding:18px;box-sizing:border-box;gap:14px}
+    .topbar{display:flex;align-items:center;gap:12px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#4cd3ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
+      box-shadow: var(--shadow-1);
+    }
+    .controls{display:flex;align-items:center;gap:10px}
+    .select, .btn {
+      border:none;padding:10px 14px;border-radius:12px;background:var(--card);box-shadow:var(--shadow-1);cursor:pointer;font-weight:600;
+      transition:transform .12s, box-shadow .12s;
+    }
+    .select:active, .btn:active{transform:translateY(2px)}
+    .btn.secondary{background:transparent;box-shadow:none;color:var(--muted);font-weight:600}
+    .main{display:grid;grid-template-columns:0.55fr 0.45fr;gap:16px;flex:1;min-height:0}
+    .editor-area{display:flex;flex-direction:column;border-radius:14px;padding:10px;background:var(--glass);backdrop-filter: blur(6px);box-shadow:var(--shadow-1);overflow:hidden}
+    .tabs{display:flex;gap:8px;padding:8px;border-radius:10px}
+    .tab{padding:8px 12px;border-radius:10px;background:var(--card);cursor:pointer;box-shadow:8px 8px 20px rgba(0,0,0,0.04)}
+    .split{display:flex;flex-direction:column;gap:10px;height:100%}
+    #monaco-editor{flex:1;border-radius:10px;overflow:hidden}
+    .right-panel{display:flex;flex-direction:column;gap:10px}
+    .preview, .terminal{flex:1;border-radius:12px;padding:10px;background:var(--card);box-shadow:var(--shadow-1);overflow:hidden;display:flex;flex-direction:column}
+    .preview iframe{border:0;flex:1;width:100%;border-radius:8px}
+    .term-actions{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    /* file list */
+    .files{display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:10px;max-height:180px;overflow:auto}
+    .file-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:linear-gradient(180deg,var(--card),transparent);cursor:pointer}
+    .file-item.active{outline:2px solid rgba(124,92,255,0.14)}
+    /* neumorphism buttons */
+    .neum{border-radius:14px;padding:10px 14px;background:var(--card);box-shadow:var(--shadow-1);transition:transform .12s}
+    .small{padding:6px 10px;font-size:13px}
+    /* responsive */
+    @media (max-width:900px){
+      .main{grid-template-columns:1fr;grid-auto-rows:minmax(200px,1fr)}
+      .brand .title{display:none}
+      .files{max-height:120px}
+    }
+    /* small helper */
+    .muted{color:var(--muted);font-size:13px}
+    .fade-in{animation:fadeIn .35s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  </style>
+</head>
+<body data-theme="light">
+  <div class="app">
+    <div class="topbar fade-in">
+      <div class="brand">
+        <div class="logo">AE</div>
+        <div>
+          <div style="font-weight:800">Abdelilah Editor</div>
+          <div class="muted" style="font-size:12px">محرر أكواد يجري داخل المتصفح — بدون Backend</div>
+        </div>
+      </div>
 
-        // تحميل الملفات المحفوظة
-        function loadSavedFiles() {
-            const savedFiles = localStorage.getItem('savedFiles');
-            if (savedFiles) {
-                files = JSON.parse(savedFiles);
-            }
-        }
+      <div class="controls">
+        <select id="langSelect" class="select" title="اختر لغة">
+          <option value="html">HTML</option>
+          <option value="javascript" selected>JavaScript</option>
+          <option value="python">Python (Pyodide)</option>
+          <option value="cpp">C++ (WASM - placeholder)</option>
+          <option value="java">Java (WASM - placeholder)</option>
+          <option value="go">Go (WASM - placeholder)</option>
+        </select>
 
-        // تهيئة التطبيق
-        function initApp() {
-            loadSavedFiles();
-            initTheme();
-            initEditor();
-            initEvents();
-            
-            // إظهار رسالة ترحيب في الطرفية
-            setTimeout(() => {
-                updateTerminal('$ مرحباً بك في محرر الأكواد!');
-                updateTerminal('$ اكتب كودك في المحرر واضغط "تشغيل" لتنفيذه');
-            }, 1000);
-        }
+        <button id="runBtn" class="btn neom">Run <i class="fa-solid fa-play" style="margin-inline-start:8px"></i></button>
+        <button id="stopBtn" class="btn neom">Stop <i class="fa-solid fa-stop" style="margin-inline-start:8px"></i></button>
+        <button id="saveBtn" class="btn neom">Save</button>
+        <button id="downloadBtn" class="btn neom">Download ZIP</button>
+        <button id="themeToggle" class="btn secondary">🌙</button>
+      </div>
+    </div>
 
-        // بدء التطبيق عند تحميل الصفحة
-        window.addEventListener('DOMContentLoaded', initApp);
-    </script>
+    <div class="main">
+      <div class="editor-area fade-in">
+        <div class="tabs" id="tabs"></div>
+        <div class="split" style="padding:8px;gap:8px">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="files" id="fileList" style="flex:1"></div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button id="newFile" class="neum small">+ ملف</button>
+              <button id="importBtn" class="neum small">استيراد</button>
+              <input type="file" id="importInput" style="display:none" multiple />
+            </div>
+          </div>
+          <div id="monaco-editor"></div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="preview fade-in">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-weight:700">المعاينة / النتائج</div>
+            <div class="muted">Live Preview & Console</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button id="showPreview" class="neum small">معاينة HTML</button>
+            <button id="clearConsole" class="neum small">مسح الطرفية</button>
+          </div>
+          <div style="display:flex;gap:8px;flex:1;min-height:0">
+            <div class="preview-frame" style="flex:1;display:flex;flex-direction:column;min-height:0">
+              <iframe id="previewFrame"></iframe>
+            </div>
+            <div class="terminal" style="width:420px;min-width:280px">
+              <div class="term-actions">
+                <div style="font-weight:700">الطرفية</div>
+                <div style="flex:1"></div>
+                <div class="muted">اكتب أوامر مثل: <code>run</code> أو <code>python script.py</code></div>
+              </div>
+              <div id="terminalContainer" style="flex:1;min-height:0"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="muted">حفظ تلقائي:</div>
+          <div id="autosaveStatus" class="muted">--</div>
+          <div style="flex:1"></div>
+          <div class="muted">حجم المشروع:</div>
+          <div id="projectSize" class="muted">0 KB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Libraries: Monaco loader, xterm, JSZip, Pyodide (deferred), WebContainer (attempt) -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <script>
+  /***********************
+   * Helper -- in-memory FS + project management
+   ***********************/
+  const PROJECT_KEY = 'abdelilah.editor.project.v1';
+  let FS = {}; // { "index.html": "..." }
+  let activeFile = null;
+  let monacoEditor = null;
+  let monacoModels = {};
+  let pyodide = null;
+  let webcontainer = null;
+  let term = null;
+  let autosaveTimer = null;
+
+  // default starter project
+  const DEFAULT_PROJECT = {
+    "index.html": `<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>Preview</title></head>
+  <body>
+    <h1 style="font-family:sans-serif;color:#333">مرحبًا — معاينة HTML</h1>
+    <p>عدّل هذه الصفحة واضغط Run.</p>
+  </body>
+</html>`,
+    "script.js": `// JavaScript output to console
+console.log("Hello from script.js");
+// DOM example (works in preview)
+document.body.style.background = "linear-gradient(180deg,#ffffff,#f3f6ff)";
+`,
+    "style.css": `body{font-family:system-ui,Segoe UI,Arial;background:#fff;margin:40px}`
+  };
+
+  function saveProjectToLocal(){
+    try{
+      localStorage.setItem(PROJECT_KEY, JSON.stringify(FS));
+      document.getElementById('autosaveStatus').textContent = 'تم الحفظ محليًا ✓';
+      updateProjectSize();
+    }catch(e){
+      console.error(e);
+      document.getElementById('autosaveStatus').textContent = 'فشل الحفظ';
+    }
+  }
+  function loadProjectFromLocal(){
+    const raw = localStorage.getItem(PROJECT_KEY);
+    if(raw){
+      try{ FS = JSON.parse(raw); return true }catch(e){ console.warn('invalid project'); }
+    }
+    FS = {...DEFAULT_PROJECT};
+    return false;
+  }
+  function updateProjectSize(){
+    let total = 0;
+    for(const k in FS) total += new Blob([FS[k]]).size;
+    document.getElementById('projectSize').textContent = Math.round(total/1024) + ' KB';
+  }
+
+  /***********************
+   * Terminal (xterm)
+   ***********************/
+  function initTerminal(){
+    term = new Terminal({cols:80,rows:18,convertEol:true});
+    term.open(document.getElementById('terminalContainer'));
+    term.writeln('محرر الطرفية جاهز — اكتب "help" للخيارات.');
+    term.onKey(e=>{
+      // simple input handling: gather char, on Enter process buffer
+      // We'll implement a very small line input handler:
+    });
+    // simple command input via prompt simulation:
+    setupSimplePrompt();
+  }
+
+  let promptBuffer = '';
+  function setupSimplePrompt(){
+    term.write('\r\n$ ');
+    promptBuffer = '';
+    term.onData(async (data)=>{
+      for(const ch of data){
+        if(ch === '\r' || ch === '\n'){
+          const cmd = promptBuffer.trim();
+          term.writeln('');
+          await handleTerminalCommand(cmd);
+          term.write('\r\n$ ');
+          promptBuffer = '';
+        } else if (ch === '\u007F'){ // backspace
+          if(promptBuffer.length>0){
+            promptBuffer = promptBuffer.slice(0,-1);
+            term.write('\b \b');
+          }
+        } else {
+          promptBuffer += ch;
+          term.write(ch);
+        }
+      }
+    });
+  }
+
+  async function handleTerminalCommand(cmd){
+    if(!cmd) return;
+    const args = cmd.split(' ').filter(Boolean);
+    const main = args[0];
+    if(main === 'help'){
+      term.writeln('أوامر مفيدة: run, ls, cat <file>, python <file>, node <file> (إذا متاح), g++ (غير مدعوم محلياً هنا)');
+      return;
+    }
+    if(main === 'ls'){
+      Object.keys(FS).forEach(f=> term.writeln(f));
+      return;
+    }
+    if(main === 'cat'){
+      if(!args[1]){ term.writeln('حدد ملف: cat filename'); return }
+      const name = args[1];
+      if(FS[name]) term.writeln(FS[name]);
+      else term.writeln('الملف غير موجود: ' + name);
+      return;
+    }
+    if(main === 'run'){
+      // run default script based on language selection
+      await runCurrentFile();
+      return;
+    }
+    if(main === 'python'){
+      if(!args[1]){ term.writeln('حدد ملف Python: python script.py'); return }
+      const f = args[1];
+      if(!FS[f]){ term.writeln('الملف غير موجود: ' + f); return }
+      if(!pyodide){
+        term.writeln('Pyodide غير مُحمل بعد — جارٍ التحميل...');
+        await loadPyodide();
+      }
+      try{
+        term.writeln('تشغيل Python -> ' + f);
+        const output = await pyodide.runPythonAsync(FS[f]);
+        if(output !== undefined) term.writeln(String(output));
+      }catch(e){ term.writeln('خطأ: ' + e); }
+      return;
+    }
+    if(main === 'node'){
+      if(!args[1]){ term.writeln('حدد ملف JS: node file.js'); return }
+      const f = args[1];
+      if(!FS[f]){ term.writeln('الملف غير موجود: ' + f); return }
+      if(!webcontainer){
+        term.writeln('WebContainer/Node غير متاح هنا. سأحاول البدء (إن أمكن)...');
+        await tryStartWebContainer();
+        if(!webcontainer){ term.writeln('تعذر تشغيل WebContainer في هذا المتصفح/الصفحة.'); return }
+      }
+      try{
+        term.writeln('تشغيل في WebContainer: ' + f);
+        // create file and run node - this is a best-effort integration
+        await webcontainer.fs.writeFile('/' + f, FS[f]);
+        const proc = await webcontainer.spawn('node', [f]);
+        const stdout = await proc.output();
+        term.writeln(stdout.toString());
+      }catch(e){ term.writeln('خطأ أثناء تشغيل Node: ' + e.message) }
+      return;
+    }
+    if(main === 'g++' || main === 'gcc'){
+      term.writeln('تحذير: ترجمة C/C++ ليست مضمّنة في هذه النسخة. لتمكينها تحتاج إلى WASM toolchain (مثل clang-wasm أو استخدام خدمات خارجية).');
+      return;
+    }
+    term.writeln('أمر غير معروف: ' + main);
+  }
+
+  /***********************
+   * Monaco Editor init
+   ***********************/
+  function initMonaco(){
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+      monacoEditor = monaco.editor.create(document.getElementById('monaco-editor'), {
+        value: '',
+        language: 'javascript',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        fontSize: 13,
+        minimap: { enabled: false }
+      });
+      // create models for FS
+      loadProjectFromLocal();
+      for(const fname in FS){
+        const lang = monaco.getLanguages().map(l=>l.id).includes(extToLang(getExt(fname))) ? extToLang(getExt(fname)) : detectLangFromFilename(fname);
+        const model = monaco.editor.createModel(FS[fname], lang, monaco.Uri.parse('file:///' + fname));
+        monacoModels[fname] = model;
+      }
+      // open first file
+      const first = Object.keys(FS)[0] || 'index.html';
+      openFile(first);
+      renderFileList();
+      setupTabs();
+      // update editor changes back to FS
+      monacoEditor.onDidChangeModelContent(()=>{
+        if(activeFile){
+          FS[activeFile] = monacoEditor.getValue();
+          scheduleAutosave();
+        }
+      });
+    });
+  }
+
+  function detectLangFromFilename(fname){
+    const ext = getExt(fname);
+    return extToLang(ext);
+  }
+  function getExt(fname){ const m = fname.match(/\.([^.]+)$/); return m?m[1]:'txt'; }
+  function extToLang(ext){
+    ext = ext.toLowerCase();
+    if(ext === 'js') return 'javascript';
+    if(ext === 'html' || ext === 'htm') return 'html';
+    if(ext === 'css') return 'css';
+    if(ext === 'py') return 'python';
+    if(ext === 'cpp' || ext === 'cc' || ext === 'c') return 'cpp';
+    return 'plaintext';
+  }
+
+  function openFile(fname){
+    if(!monacoModels[fname]){
+      const lang = detectLangFromFilename(fname);
+      const model = monaco.editor.createModel(FS[fname]||'', lang, monaco.Uri.parse('file:///' + fname));
+      monacoModels[fname] = model;
+    }
+    monacoEditor.setModel(monacoModels[fname]);
+    activeFile = fname;
+    highlightActiveFile();
+  }
+
+  function renderFileList(){
+    const el = document.getElementById('fileList');
+    el.innerHTML = '';
+    Object.keys(FS).forEach(f=>{
+      const item = document.createElement('div'); item.className = 'file-item'; item.textContent = f;
+      if(f === activeFile) item.classList.add('active');
+      item.onclick = ()=> openFile(f);
+      el.appendChild(item);
+    });
+  }
+
+  function setupTabs(){
+    const tabs = document.getElementById('tabs');
+    tabs.innerHTML = '';
+    Object.keys(FS).forEach(f=>{
+      const t = document.createElement('div'); t.className = 'tab'; t.textContent = f;
+      t.onclick = ()=> openFile(f);
+      tabs.appendChild(t);
+    });
+  }
+
+  /***********************
+   * Run / Preview / Stop
+   ***********************/
+  function showPreview(){
+    // Build an HTML page by injecting style.css and script.js if present, plus index.html content
+    const html = FS['index.html'] || (FS['index.htm'] || null);
+    if(!html){
+      // if no index, create simple preview from JS/HTML
+      const base = `<!doctype html><html><head><meta charset="utf-8"></head><body><pre>لا يوجد index.html في المشروع</pre></body></html>`;
+      writePreview(base);
+      return;
+    }
+    const style = FS['style.css'] ? `<style>\n${FS['style.css']}\n</style>` : '';
+    const script = FS['script.js'] ? `<script>\ntry{ ${FS['script.js']} }catch(e){ console.error(e) }\n</script>` : '';
+    // if index.html already contains its own CSS/JS, prefer it but still inject
+    let final = html;
+    // Naive injection: put style before </head>, script before </body>
+    final = final.replace(/<\/head>/i, style + '\n</head>');
+    final = final.replace(/<\/body>/i, script + '\n</body>');
+    writePreview(final);
+  }
+  function writePreview(content){
+    const iframe = document.getElementById('previewFrame');
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(content);
+    doc.close();
+    // capture console logs from iframe
+    hookPreviewConsole(iframe);
+  }
+
+  function hookPreviewConsole(iframe){
+    try{
+      const win = iframe.contentWindow;
+      // override console
+      win.console.log = function(...args){
+        term.writeln('[Preview] ' + args.map(a=>String(a)).join(' '));
+      };
+      win.console.error = function(...args){
+        term.writeln('[Preview][Error] ' + args.join(' '));
+      };
+    }catch(e){ /* cross-origin might block */ }
+  }
+
+  async function runCurrentFile(){
+    const ext = getExt(activeFile||'script.js');
+    if(ext === 'html' || activeFile === 'index.html'){
+      showPreview();
+      term.writeln('تم تحديث المعاينة.');
+      return;
+    }
+    if(ext === 'js'){
+      // run using Function, capture console
+      const code = FS[activeFile];
+      term.writeln('تشغيل JavaScript: ' + activeFile);
+      // sandboxed Function
+      try{
+        const consoleProxy = {
+          log: (...args)=> term.writeln('[log] ' + args.map(a=>String(a)).join(' ')),
+          error: (...args)=> term.writeln('[error] ' + args.join(' '))
+        };
+        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+        const fn = new AsyncFunction('console', code);
+        await fn(consoleProxy);
+        term.writeln('انتهى التنفيذ.');
+      }catch(e){ term.writeln('خطأ: ' + e); }
+      return;
+    }
+    if(ext === 'py'){
+      if(!pyodide){ term.writeln('جارٍ تحميل Pyodide...'); await loadPyodide(); }
+      try{
+        term.writeln('تشغيل Python: ' + activeFile);
+        const out = await pyodide.runPythonAsync(FS[activeFile]);
+        if(out !== undefined) term.writeln(String(out));
+      }catch(e){ term.writeln('خطأ Python: ' + e); }
+      return;
+    }
+    term.writeln('التشغيل لهذه اللغة غير متوفر محلياً. يمكنك تجربة تصدير المشروع واستخدام خدمات جاهزة أو إعداد WASM toolchain.');
+  }
+
+  /***********************
+   * Pyodide loader
+   ***********************/
+  async function loadPyodide(){
+    if(pyodide) return pyodide;
+    try{
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
+      document.head.appendChild(script);
+      script.onload = async ()=>{
+        term.writeln('Pyodide مُحمّل. جارٍ تهيئته...');
+      };
+      // wait for global load
+      await new Promise((res, rej)=> {
+        script.onload = res;
+        script.onerror = ()=> rej(new Error('فشل تحميل Pyodide'));
+      });
+      pyodide = await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/'});
+      term.writeln('Pyodide جاهز.');
+      return pyodide;
+    }catch(e){
+      term.writeln('خطأ تحميل Pyodide: ' + e.message);
+      return null;
+    }
+  }
+
+  /***********************
+   * WebContainer (Node) attempt (best-effort)
+   ***********************/
+  async function tryStartWebContainer(){
+    if(window.WebContainer){ // some pages expose WebContainer already
+      try{
+        webcontainer = await window.WebContainer.boot();
+        term.writeln('WebContainer جاهز.');
+        return webcontainer;
+      }catch(e){}
+    }
+    try{
+      // attempt dynamic import from unpkg (may be blocked by CORS/policy)
+      const mod = await import('https://unpkg.com/@webcontainer/api@0.8.0/dist/index.js');
+      if(mod && mod.WebContainer){
+        webcontainer = await mod.WebContainer.boot();
+        term.writeln('WebContainer (via unpkg) جاهز.');
+        return webcontainer;
+      }
+    }catch(e){
+      console.warn('WebContainer load error', e);
+    }
+    term.writeln('تعذر بدء WebContainer في هذه الصفحة. للتمكين: استعمل StackBlitz SDK/بيئة تدعم WebContainer أو استضف كصفحة على origin مسموح.');
+    return null;
+  }
+
+  /***********************
+   * File operations: new, import, download zip
+   ***********************/
+  function newFile(){
+    let name = prompt('اسم الملف الجديد (مثال: main.js أو index.html):', 'new.txt');
+    if(!name) return;
+    if(FS[name]){ alert('الملف موجود بالفعل'); return }
+    FS[name] = '';
+    // create model
+    if(monaco && monaco.editor){
+      const model = monaco.editor.createModel(FS[name], detectLangFromFilename(name), monaco.Uri.parse('file:///' + name));
+      monacoModels[name] = model;
+      openFile(name);
+      renderFileList(); setupTabs(); scheduleAutosave();
+    }
+  }
+
+  function importFiles(files){
+    Array.from(files).forEach(file=>{
+      const reader = new FileReader();
+      reader.onload = e=>{
+        FS[file.name] = e.target.result;
+        if(monaco && monaco.editor){
+          const model = monaco.editor.createModel(FS[file.name], detectLangFromFilename(file.name), monaco.Uri.parse('file:///' + file.name));
+          monacoModels[file.name] = model;
+        }
+        renderFileList(); setupTabs(); scheduleAutosave();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  async function downloadZip(){
+    const zip = new JSZip();
+    for(const k in FS) zip.file(k, FS[k]);
+    const content = await zip.generateAsync({type:'blob'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = 'project.zip';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  /***********************
+   * Autosave
+   ***********************/
+  function scheduleAutosave(){
+    document.getElementById('autosaveStatus').textContent = 'جارٍ الحفظ...';
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(()=>{
+      // update FS from current model
+      if(activeFile && monacoEditor && monacoEditor.getModel){
+        FS[activeFile] = monacoEditor.getValue();
+      }
+      saveProjectToLocal();
+    }, 800);
+  }
+
+  /***********************
+   * UI wiring
+   ***********************/
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    initTerminal();
+    initMonaco();
+
+    document.getElementById('newFile').onclick = newFile;
+    document.getElementById('importBtn').onclick = ()=> document.getElementById('importInput').click();
+    document.getElementById('importInput').onchange = (e)=> importFiles(e.target.files);
+
+    document.getElementById('runBtn').onclick = async ()=>{
+      // sync current model to FS
+      if(activeFile && monacoEditor) FS[activeFile] = monacoEditor.getValue();
+      await runCurrentFile();
+    };
+    document.getElementById('stopBtn').onclick = ()=>{
+      term.writeln('Stop pressed — لا تنفيذ متزامن ليتم إيقافه هنا (إن وجد proc عبر WebContainer يمكن إنهاؤه).');
+      // extension point: if using webcontainer, we could kill processes.
+    };
+    document.getElementById('saveBtn').onclick = ()=>{
+      if(activeFile && monacoEditor) FS[activeFile] = monacoEditor.getValue();
+      saveProjectToLocal();
+      renderFileList(); setupTabs();
+      term.writeln('تم الحفظ يدوياً.');
+    };
+    document.getElementById('downloadBtn').onclick = downloadZip;
+    document.getElementById('showPreview').onclick = showPreview;
+    document.getElementById('clearConsole').onclick = ()=> { term.clear(); term.writeln('طرفية نظيفة'); };
+
+    document.getElementById('langSelect').onchange = (e)=>{
+      const v = e.target.value;
+      // switch syntax mode for model
+      if(activeFile && monacoModels[activeFile]){
+        monaco.editor.setModelLanguage(monacoModels[activeFile], v === 'javascript' ? 'javascript' : (v==='html'?'html':(v==='python'?'python':(v==='cpp'?'cpp':'plaintext'))));
+      }
+    };
+
+    // theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.onclick = ()=>{
+      const body = document.body;
+      const cur = body.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      body.setAttribute('data-theme', next);
+      themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+      if(monaco && monaco.editor) monaco.editor.setTheme(next === 'dark' ? 'vs-dark' : 'vs');
+    };
+
+    // load project into editor after Monaco ready (monaco init does that)
+    // initial autosave indicator
+    document.getElementById('autosaveStatus').textContent = 'جاهز';
+    updateProjectSize();
+  });
+
+  /***********************
+   * Utilities & finishing touches
+   ***********************/
+  function highlightActiveFile(){
+    const items = document.querySelectorAll('.file-item');
+    items.forEach(it=> it.classList.toggle('active', it.textContent === activeFile));
+  }
+
+  // Inform user about WASM languages (C++, Java, Go)
+  // We add a short notice in terminal on load:
+  setTimeout(()=> {
+    initConsoleNotice();
+  }, 1200);
+
+  function initConsoleNotice(){
+    term.writeln('ملاحظة: دعم C++/Java/Go يتطلب WASM toolchain. هذا المشروع يوفر ركيزة جاهزة لدمج Pyodide وWebContainer. للاطلاع على كيفية إضافة C++ عبر WASM راجع README أو اسألني وسأزودك بخطوات مفصّلة.');
+  }
+  </script>
 </body>
 </html>
