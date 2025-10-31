@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محرر الأكواد الاحترافي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --bg-color: #f5f8ff;
+            --sidebar-bg: #ffffff;
+            --editor-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+            --terminal-bg: #1a202c;
+            --terminal-text: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .dark-mode {
+            --primary-color: #5e7df7;
+            --bg-color: #1a202c;
+            --sidebar-bg: #2d3748;
+            --editor-bg: #2d3748;
+            --text-color: #e2e8f0;
+            --border-color: #4a5568;
+            --terminal-bg: #0d1117;
+            --terminal-text: #c9d1d9;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* الشريط العلوي */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background-color: var(--sidebar-bg);
+            box-shadow: var(--shadow);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .language-selector select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--editor-bg);
+            color: var(--text-color);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .language-selector select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(74, 108, 247, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(74, 108, 247, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: var(--editor-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--border-color);
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* الشريط الجانبي */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid var(--border-color);
+            padding: 15px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-item {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .file-item:hover {
+            background-color: var(--border-color);
+        }
+
+        .file-item.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .file-icon {
+            font-size: 0.9rem;
+        }
+
+        /* منطقة المحرر */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #editor {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* الطرفية */
+        .terminal-container {
+            height: 250px;
+            background-color: var(--terminal-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--terminal-text);
+            font-size: 0.9rem;
+        }
+
+        .terminal-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .terminal-controls button {
+            background: none;
+            border: none;
+            color: var(--terminal-text);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #terminal {
+            flex: 1;
+            padding: 10px 15px;
+            color: var(--terminal-text);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+        }
+
+        .terminal-prompt {
+            color: #4ade80;
+            margin-left: 5px;
+        }
+
+        #terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--terminal-text);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            outline: none;
+            padding: 0 5px;
+        }
+
+        /* المعاينة */
+        .preview-container {
+            height: 250px;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            background-color: var(--sidebar-bg);
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        #preview {
+            flex: 1;
+            border: none;
+        }
+
+        /* التبويبات */
+        .tabs {
+            display: flex;
+            background-color: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* التجاوبية */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 150px;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+            
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .editor-container {
+                height: 60vh;
+            }
+            
+            .terminal-container, .preview-container {
+                height: 150px;
+            }
+        }
+
+        /* تأثيرات النيو مورفزم */
+        .neumorphic {
+            border-radius: 10px;
+            background: var(--sidebar-bg);
+            box-shadow:  5px 5px 10px #b8b8b8,
+                        -5px -5px 10px #ffffff;
+        }
+
+        .dark-mode .neumorphic {
+            box-shadow:  5px 5px 10px #1a1a1a,
+                        -5px -5px 10px #2e2e2e;
+        }
+
+        /* الأنيميشن */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* شريط التمرير */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--border-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a5bd9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                <span>محرر الأكواد</span>
+            </div>
+            <div class="controls">
+                <div class="language-selector">
+                    <select id="language-select">
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="python">Python</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                    </select>
+                </div>
+                <button class="btn" id="run-btn">
+                    <i class="fas fa-play"></i>
+                    تشغيل
+                </button>
+                <button class="btn btn-secondary" id="save-btn">
+                    <i class="fas fa-save"></i>
+                    حفظ
+                </button>
+                <button class="btn btn-secondary" id="download-btn">
+                    <i class="fas fa-download"></i>
+                    تحميل
+                </button>
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="editor">المحرر</div>
+                    <div class="tab" data-tab="preview">المعاينة</div>
+                </div>
+                <div class="editor-wrapper">
+                    <div id="editor"></div>
+                </div>
+                <div class="terminal-container">
+                    <div class="terminal-header">
+                        <span>الطرفية</span>
+                        <div class="terminal-controls">
+                            <button id="clear-terminal">
+                                <i class="fas fa-trash"></i> مسح
+                            </button>
+                            <button id="toggle-terminal">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="terminal"></div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">الملفات</div>
+                    <button class="btn btn-secondary" id="new-file-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <ul class="file-list">
+                    <li class="file-item active" data-file="index.html">
+                        <i class="fas fa-file-code file-icon"></i>
+                        index.html
+                    </li>
+                    <li class="file-item" data-file="script.js">
+                        <i class="fas fa-file-code file-icon"></i>
+                        script.js
+                    </li>
+                    <li class="file-item" data-file="style.css">
+                        <i class="fas fa-file-code file-icon"></i>
+                        style.css
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
+    <script>
+        // تهيئة المتغيرات
+        let editor;
+        let currentFile = 'index.html';
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        let files = {
+            'index.html': `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشروعي</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>مرحباً بالعالم!</h1>
+        <p>هذا مشروع HTML بسيط.</p>
+        <button id="click-btn">انقر هنا</button>
+    </div>
+    <script src="script.js"><\/script>
+</body>
+</html>`,
+            'script.js': `// كود JavaScript هنا
+document.getElementById('click-btn').addEventListener('click', function() {
+    alert('مرحباً! لقد ضغطت على الزر');
+    console.log('تم النقر على الزر');
+});
+
+// دالة بسيطة
+function greet(name) {
+    return 'مرحباً ' + name + '!';
+}
+
+console.log(greet('المستخدم'));
+console.log('يمكنك كتابة كود JavaScript هنا');`,
+            'style.css': `/* كود CSS هنا */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f8ff;
+    color: #2d3748;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #4a6cf7;
+}
+
+button {
+    background-color: #4a6cf7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #3a5bd9;
+}`
+        };
+
+        // تهيئة الوضع الليلي
+        function initTheme() {
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+
+        // تهيئة محرر Monaco
+        function initEditor() {
+            require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
+            
+            require(['vs/editor/editor.main'], function() {
+                editor = monaco.editor.create(document.getElementById('editor'), {
+                    value: files[currentFile],
+                    language: getLanguageFromFile(currentFile),
+                    theme: isDarkMode ? 'vs-dark' : 'vs',
+                    automaticLayout: true,
+                    fontSize: 14,
+                    minimap: { enabled: true },
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on'
+                });
+
+                // تحديث المحتوى عند تغيير النص
+                editor.onDidChangeModelContent(function() {
+                    files[currentFile] = editor.getValue();
+                    localStorage.setItem('savedFiles', JSON.stringify(files));
+                });
+            });
+        }
+
+        // الحصول على اللغة من اسم الملف
+        function getLanguageFromFile(filename) {
+            const ext = filename.split('.').pop();
+            const langMap = {
+                'html': 'html',
+                'css': 'css',
+                'js': 'javascript',
+                'py': 'python',
+                'cpp': 'cpp',
+                'java': 'java'
+            };
+            return langMap[ext] || 'plaintext';
+        }
+
+        // تحديث المحرر عند تغيير الملف
+        function updateEditorForFile(file) {
+            if (editor) {
+                const model = editor.getModel();
+                model.setValue(files[file] || '// اكتب كودك هنا');
+                monaco.editor.setModelLanguage(model, getLanguageFromFile(file));
+            }
+        }
+
+        // تحديث الطرفية
+        function updateTerminal(message, isError = false) {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.textContent = message;
+            line.style.color = isError ? '#f56565' : '#e2e8f0';
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // محاكاة تشغيل الكود
+        function runCode() {
+            updateTerminal('$ تشغيل الكود...');
+            
+            // محاكاة وقت التشغيل
+            setTimeout(() => {
+                if (currentFile === 'index.html') {
+                    // عرض معاينة HTML
+                    document.querySelector('.preview-container').style.display = 'flex';
+                    const preview = document.getElementById('preview');
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'preview-frame';
+                    iframe.srcdoc = files['index.html'] + 
+                                    '<style>' + files['style.css'] + '</style>' + 
+                                    '<script>' + files['script.js'] + '<\/script>';
+                    preview.innerHTML = '';
+                    preview.appendChild(iframe);
+                    updateTerminal('$ تم تشغيل مشروع HTML بنجاح');
+                } else if (currentFile === 'script.js') {
+                    // محاكاة تشغيل JavaScript
+                    try {
+                        // هذه مجرد محاكاة - في التطبيق الحقيقي سيتم استخدام WebContainers
+                        updateTerminal('$ تشغيل script.js...');
+                        updateTerminal('> مرحباً المستخدم!');
+                        updateTerminal('> يمكنك كتابة كود JavaScript هنا');
+                        updateTerminal('$ تم التشغيل بنجاح');
+                    } catch (error) {
+                        updateTerminal('$ خطأ: ' + error.message, true);
+                    }
+                } else if (currentFile === 'style.css') {
+                    updateTerminal('$ تم تحميل ملف CSS');
+                } else if (currentFile.endsWith('.py')) {
+                    updateTerminal('$ تشغيل Python باستخدام Pyodide...');
+                    updateTerminal('> مرحباً من Python!');
+                } else if (currentFile.endsWith('.cpp')) {
+                    updateTerminal('$ تجميع وتشغيل C++ باستخدام Emscripten...');
+                    updateTerminal('> مرحباً من C++!');
+                } else if (currentFile.endsWith('.java')) {
+                    updateTerminal('$ تجميع وتشغيل Java باستخدام CheerpJ...');
+                    updateTerminal('> مرحباً من Java!');
+                }
+            }, 1000);
+        }
+
+        // حفظ الملفات
+        function saveFiles() {
+            localStorage.setItem('savedFiles', JSON.stringify(files));
+            updateTerminal('$ تم حفظ الملفات بنجاح');
+        }
+
+        // تحميل الملفات
+        function downloadFiles() {
+            updateTerminal('$ جاري تحميل الملفات...');
+            // محاكاة التحميل
+            setTimeout(() => {
+                updateTerminal('$ تم تحميل الملفات بنجاح');
+            }, 1000);
+        }
+
+        // إنشاء ملف جديد
+        function createNewFile() {
+            const fileName = prompt('أدخل اسم الملف الجديد (مع الامتداد):');
+            if (fileName) {
+                files[fileName] = '// اكتب كودك هنا';
+                
+                const fileList = document.querySelector('.file-list');
+                const fileItem = document.createElement('li');
+                fileItem.className = 'file-item';
+                fileItem.setAttribute('data-file', fileName);
+                
+                const fileIcon = document.createElement('i');
+                fileIcon.className = 'fas fa-file-code file-icon';
+                
+                fileItem.appendChild(fileIcon);
+                fileItem.appendChild(document.createTextNode(fileName));
+                fileList.appendChild(fileItem);
+                
+                // إضافة مستمع حدث للملف الجديد
+                fileItem.addEventListener('click', function() {
+                    document.querySelectorAll('.file-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    currentFile = this.getAttribute('data-file');
+                    updateEditorForFile(currentFile);
+                });
+                
+                updateTerminal('$ تم إنشاء ملف جديد: ' + fileName);
+            }
+        }
+
+        // تهيئة الأحداث
+        function initEvents() {
+            // تغيير اللغة
+            document.getElementById('language-select').addEventListener('change', function() {
+                const lang = this.value;
+                let newFile = '';
+                
+                switch(lang) {
+                    case 'html': newFile = 'index.html'; break;
+                    case 'javascript': newFile = 'script.js'; break;
+                    case 'css': newFile = 'style.css'; break;
+                    case 'python': newFile = 'main.py'; break;
+                    case 'cpp': newFile = 'main.cpp'; break;
+                    case 'java': newFile = 'Main.java'; break;
+                }
+                
+                if (newFile && !files[newFile]) {
+                    files[newFile] = getDefaultCode(lang);
+                }
+                
+                if (newFile) {
+                    document.querySelectorAll('.file-item').forEach(item => {
+                        item.classList.remove('active');
+                        if (item.getAttribute('data-file') === newFile) {
+                            item.classList.add('active');
+                        }
+                    });
+                    
+                    currentFile = newFile;
+                    updateEditorForFile(currentFile);
+                }
+            });
+
+            // تشغيل الكود
+            document.getElementById('run-btn').addEventListener('click', runCode);
+
+            // حفظ الملفات
+            document.getElementById('save-btn').addEventListener('click', saveFiles);
+
+            // تحميل الملفات
+            document.getElementById('download-btn').addEventListener('click', downloadFiles);
+
+            // تبديل الوضع الليلي
+            document.getElementById('theme-toggle').addEventListener('click', function() {
+                isDarkMode = !isDarkMode;
+                localStorage.setItem('darkMode', isDarkMode);
+                initTheme();
+                
+                if (editor) {
+                    monaco.editor.setTheme(isDarkMode ? 'vs-dark' : 'vs');
+                }
+            });
+
+            // إنشاء ملف جديد
+            document.getElementById('new-file-btn').addEventListener('click', createNewFile);
+
+            // تغيير الملف النشط
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.file-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    currentFile = this.getAttribute('data-file');
+                    updateEditorForFile(currentFile);
+                });
+            });
+
+            // التبويبات
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    const tabName = this.getAttribute('data-tab');
+                    if (tabName === 'preview') {
+                        document.querySelector('.terminal-container').style.display = 'none';
+                        document.querySelector('.preview-container').style.display = 'flex';
+                    } else {
+                        document.querySelector('.terminal-container').style.display = 'flex';
+                        document.querySelector('.preview-container').style.display = 'none';
+                    }
+                });
+            });
+
+            // مسح الطرفية
+            document.getElementById('clear-terminal').addEventListener('click', function() {
+                document.getElementById('terminal').innerHTML = '';
+            });
+
+            // تبديل الطرفية
+            document.getElementById('toggle-terminal').addEventListener('click', function() {
+                const terminal = document.querySelector('.terminal-container');
+                if (terminal.style.height === '40px') {
+                    terminal.style.height = '250px';
+                    this.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                } else {
+                    terminal.style.height = '40px';
+                    this.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                }
+            });
+        }
+
+        // الحصول على الكود الافتراضي للغة
+        function getDefaultCode(language) {
+            switch(language) {
+                case 'python':
+                    return `# كود Python هنا
+def main():
+    print("مرحباً بالعالم من Python!")
+    
+if __name__ == "__main__":
+    main()`;
+                case 'cpp':
+                    return `// كود C++ هنا
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "مرحباً بالعالم من C++!" << endl;
+    return 0;
+}`;
+                case 'java':
+                    return `// كود Java هنا
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("مرحباً بالعالم من Java!");
+    }
+}`;
+                default:
+                    return '// اكتب كودك هنا';
+            }
+        }
+
+        // تحميل الملفات المحفوظة
+        function loadSavedFiles() {
+            const savedFiles = localStorage.getItem('savedFiles');
+            if (savedFiles) {
+                files = JSON.parse(savedFiles);
+            }
+        }
+
+        // تهيئة التطبيق
+        function initApp() {
+            loadSavedFiles();
+            initTheme();
+            initEditor();
+            initEvents();
+            
+            // إظهار رسالة ترحيب في الطرفية
+            setTimeout(() => {
+                updateTerminal('$ مرحباً بك في محرر الأكواد!');
+                updateTerminal('$ اكتب كودك في المحرر واضغط "تشغيل" لتنفيذه');
+            }, 1000);
+        }
+
+        // بدء التطبيق عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
